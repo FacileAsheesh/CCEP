@@ -14,9 +14,7 @@ function requestConsent() {
         $("#consent").hide();
         $("#divError").hide();
         accessToken = data.accessToken;
-           // microsoftTeams.getContext((context) => {
-                //alert("team Role :" + context.userTeamRole);
-                //getUserRole(context.userPrincipalName);
+          
                 var tid = context.tid;
                 tid = tid.slice(24, 36) + "_accesstokentime";
                 var currentDate = new Date();
@@ -38,7 +36,7 @@ function requestConsent() {
 
 function getToken() {
     return new Promise((resolve, reject) => {
-        //mywindow = window.open(window.location.origin + "/AuthStart.html", "Azure Login", "location=1,status=1,scrollbars=1,width=350,height=340");
+      
         var w = 450, h = 450;
         var left = (screen.width / 2) - (w / 2);
         var top = (screen.height / 2) - (h / 2);
@@ -52,10 +50,10 @@ function Success() {
 }
 
 function GetAzureToken() {
-  
+
     var etcode = localStorage.getItem('et_code')
     var settings = {
-        "url": "https://envirotrakapi.azurewebsites.net/api/AzureToken",
+        "url": "https://envirotrakapi.azurewebsites.net/api/AzureGetTokenByTanant",
         "method": "POST",
         "timeout": 0,
         "headers": {
@@ -69,7 +67,7 @@ function GetAzureToken() {
                 "client_id": localStorage.getItem("REACT_APP_client_id"),
                 "userId": "eefff682-c1a4-4290-a86d-bd760bef0130",
                 "userEmail": "asheesh@facileconsulting.com",
-                "tenantId": "f50d7f47-bec5-46dd-9eb0-e2a38d7689dc",
+                "tenantId": localStorage.getItem("REACT_APP_tenantId"),
                 "redirect_uri": window.location.origin + "/AuthEnd.html"
                 , "client_secret": localStorage.getItem("REACT_APP_client_secret")
             }
@@ -90,9 +88,6 @@ function GetAzureToken() {
         else {
             window.location.replace("/home");
         }
-       
-        //getUser();
-        //return 1;
 
 
     }).fail(function (data) {
@@ -103,10 +98,46 @@ function GetAzureToken() {
 
 
 
+function getRefreshToken() {
+    var refresh_token = localStorage.getItem('refresh_token')
+    var settings = {
+        "url": "https://envirotrakapi.azurewebsites.net/api/AzureGetTokenByTanant",
+        "method": "POST",
+        "timeout": 0,
+        "headers": {
+            "x-functions-key": "k0LRVnEqAPlNb/UZrKyLHsK6FWh1qqJ108scaq0VX64IYuCB3eBg==",
+            "Content-Type": "application/json"
+        },
+        "data": JSON.stringify(
+            {
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token,
+                "code": "",
+                "client_id": localStorage.getItem("REACT_APP_client_id"),
+                "userId": "eefff682-c1a4-4290-a86d-bd760bef0130",
+                "userEmail": "asheesh@facileconsulting.com",
+                "tenantId": localStorage.getItem("REACT_APP_tenantId"),
+                "redirect_uri": window.location.origin + "/AuthEnd.html"
+                , "client_secret": localStorage.getItem("REACT_APP_client_secret")
+            }
 
 
-function getRefreshToken(clientSideToken) {
-   
+        ),
+    };
+
+    $.ajax(settings).done(function (response) {
+        var res = JSON.parse(response);
+
+        localStorage.setItem("access_token", res.access_token);
+        localStorage.setItem("refresh_token", res.refresh_token);
+        localStorage.setItem("expires_in", res.expires_in);
+        
+
+
+    }).fail(function (data) {
+       
+        console.log(data);
+    });
 }
 
 function IsValidJSONString(str) {
@@ -127,7 +158,8 @@ function getUser() {
             beforeSend: function (request) {
                 request.setRequestHeader("Authorization", "Bearer " + localStorage.getItem("access_token"));
             },
-            success: function (profile) {                
+            success: function (profile) {
+             
                 var displayName = profile.displayName;
                 // alert(displayName);
                 console.log(displayName);
